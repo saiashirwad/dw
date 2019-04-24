@@ -1,0 +1,83 @@
+import json
+from tweepy.streaming import StreamListener
+from tweepy import OAuthHandler, Stream
+
+import time
+import random
+
+from textblob import TextBlob
+# Not sure if I will end up using redis, so..
+
+from config import *
+from utils import _hs, _hi
+
+
+class TweetStreamListener(StreamListener):
+    def on_status(self, status):
+        user, place, tweet = parse_status(status)
+        pdb.set_trace()
+
+
+    def on_error(self, status_code):
+        if status_code == 420:
+            return False
+
+
+auth = OAuthHandler(api_key, api_secret)
+auth.set_access_token(access_token, access_token_secret)
+
+
+def parse_status(s):
+    
+    user = (_hi(s.user.id), 
+            _hs(s.user.screen_name), 
+            _hs(s.user.name) ,
+            _hs(s.user.description),
+            _hs(s.user.lang), 
+            _hs(s.user.created_at), 
+            _hs(s.user.time_zone), 
+            _hs(s.user.location))
+
+
+
+    if s.place != None:
+        place = (_hi(s.place.id),
+                _hs(s.place.country_code),
+                _hs(s.place.country),
+                _hs(s.place.name),
+                _hs(s.place.full_name),
+                _hs(s.place.type))
+    else:
+        place = (0, '', '', '', '', '')
+
+    tweet = (s.id,
+            _hs(s.text),
+            _hs(s.created_at),
+            _hs(s.source),
+            _hs(s.lang),
+            TextBlob(s.text).polarity,
+            _hi(s.in_reply_to_status_id),
+            _hi(s.in_reply_to_user_id),
+            _hs(s.in_reply_to_screen_name))
+
+    return user, place, tweet
+
+
+
+
+
+
+if __name__ == '__main__':
+
+    flag = True
+    while(flag):
+
+        try:
+            listener = TweetStreamListener()
+            stream = Stream(auth, listener)
+            stream.filter(track=["microsoft", "google"])
+            time.sleep(10 * (1 + random.random()))
+
+        except Exception as e:
+            print(e) 
+
