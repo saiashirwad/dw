@@ -7,7 +7,7 @@ db = mysql.connector.connect(
         database="dw_test"
         )
 
-cursor = db.cursor()
+cursor = db.cursor(buffered=True)
 
 api_key = "USxqIbXJDOdaYZLpMgR94cw4Z"
 api_secret = "geXskTyq5qqx9CnnuFpFko62HAHW9Cqm38k4W6mSAlVR8h3IyS"

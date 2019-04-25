@@ -8,7 +8,6 @@ import random
 import os
 from textblob import TextBlob
 
-from hashtags import *;
 
 
 # Not sure if I will end up using redis, so..
@@ -19,7 +18,8 @@ from config import *
 from utils import _hs, _hi, clean
 from datetime import datetime
 
-class TweetStreamListener(StreamListener):
+
+class TestStreamListener(StreamListener):
     def on_status(self, status):
         if status.lang == "en":
             user, place, tweet, time, tweet_fact, user_fact = parse_status(status)
@@ -27,21 +27,17 @@ class TweetStreamListener(StreamListener):
             if place != None:
                 p = insert_place(place)
                 if p:
-                    # pdb.set_trace()
+                    if len(status.entities["hashtags"]) > 0:
+                        hashtags = tuple([i["text"] for i in status.entities["hashtags"]])
+
+                        print(hashtags)
                     u = insert_user(user)
                     t = insert_tweet(tweet)
                     ti = insert_time(time)
-                    # print(u, p, t, ti)
+                    print(u, p, t, ti)
                     insert_tweet_fact(t, u, ti, p, tweet_fact)
                     #pdb.set_trace()
                     insert_user_fact(u, ti, user_fact)
-
-
-                    if len(status.entities["hashtags"]) > 0:
-                        hashtags = tuple([i["text"] for i in status.entities["hashtags"]])
-                        insert_hashtags(hashtags, t)
-
-
 
     def on_error(self, error):
         pass
@@ -55,16 +51,17 @@ def insert_tweet_fact(t, u, ti, p, tweet_fact):
         cursor.execute(query)
         db.commit()
     except Exception as e:
-        pass
+        print(e)
 
 
 def insert_user_fact(u, ti, user_fact):
     query = "insert into user_fact (user_dim_id, time_dim_id, friends_count, followers_count, listed_count, statuses_count, favorites_count) values ({}, {}, {}, {}, {}, {}, {})".format(u, ti, *user_fact)
+    print(query)
     try:
         cursor.execute(query)
         db.commit()
     except Exception as e:
-        pass
+        print(e)
 
 
 auth = OAuthHandler(api_key, api_secret)
@@ -87,7 +84,7 @@ def insert_place(place):
         cursor.execute(query)
         db.commit()
     except Exception as e:
-        pass
+        print(e)
     try:
         query = "select place_dim_id from place_dim where place_id='{}'".format(place[0])
         cursor.execute(query)
@@ -107,7 +104,7 @@ def insert_tweet(tweet):
         cursor.execute(query)
         return cursor.fetchone()[0]
     except Exception as e:
-        pass
+        print(e)
 
 def insert_time(time):
     query = "insert into time_dim (time_timestamp, time_seconds, time_minutes, time_hours, time_day, time_month, time_year) values ('{}', {}, {}, {}, {}, {}, {})".format(*time)
@@ -174,19 +171,20 @@ def parse_status(s):
 
 box_london = [-0.510375,51.28676,0.334015,51.691874]
 geobox_us = [-125.14,30.28,-64.05,48.85]
-geobox_india = [68.11,6.55,97.4,35.67]
-world = [-25.2,-57.7,-23.3,77.0]
+
+
 if __name__ == '__main__':
 
     flag = True
     while(flag):
 
         try:
-            listener = TweetStreamListener()
+            listener = TestStreamListener()
             stream = Stream(auth, listener)
-            stream.filter(track=["trump", "mexico", "usa", "president", "wall", "congress", "impeach", "sanders"], locations=geobox_us+box_london)
-            time.sleep(3 * (1 + random.random()))
+            print("here")
+            stream.filter(track=["#TakeWarning", "#ALLCAPS", "Canes", "#bucciovertimechallenge", "#CARvsWSH"])
+            time.sleep(10 * (1 + random.random()))
 
         except Exception as e:
-            # print(e)
-            pass
+            print(e)
+
