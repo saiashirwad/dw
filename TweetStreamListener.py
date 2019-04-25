@@ -25,24 +25,41 @@ class TweetStreamListener(StreamListener):
             #pdb.set_trace()
             if place != None:
                 p = insert_place(place)
-                #print(user, place, tweet, time)
-                #pdb.set_trace()
                 if p:
+
+                    pdb.set_trace()
                     u = insert_user(user)
                     t = insert_tweet(tweet)
                     ti = insert_time(time)
-
                     print(u, p, t, ti)
                     insert_tweet_fact(t, u, ti, p, tweet_fact)
                     #pdb.set_trace()
                     insert_user_fact(u, ti, user_fact)
-
 
     def on_error(self, error):
         pass
 
     def on_exception(self, exception):
         pass
+
+def insert_tweet_fact(t, u, ti, p, tweet_fact):
+    query = "insert into tweet_fact (tweet_dim_id, user_dim_id, time_dim_id, place_dim_id, retweet_count, favorite_count) values ({}, {}, {}, {}, {}, {})".format(t, u, ti, p, *tweet_fact)
+    try:
+        cursor.execute(query)
+        db.commit()
+    except Exception as e:
+        print(e)
+
+
+def insert_user_fact(u, ti, user_fact):
+    query = "insert into user_fact (user_dim_id, time_dim_id, friends_count, followers_count, listed_count, statuses_count, favorites_count) values ({}, {}, {}, {}, {}, {}, {})".format(u, ti, *user_fact)
+    print(query)
+    try:
+        cursor.execute(query)
+        db.commit()
+    except Exception as e:
+        print(e)
+
 
 auth = OAuthHandler(api_key, api_secret)
 auth.set_access_token(access_token, access_token_secret)
@@ -61,20 +78,16 @@ def insert_user(user):
 def insert_place(place):
     query = "insert into place_dim (place_id, place_country_code, place_country, place_name, place_full_name, place_type) values ('{}', '{}', '{}', '{}', '{}', '{}')".format(*place)
     try:
-        #pdb.set_trace()
         cursor.execute(query)
         db.commit()
-
     except Exception as e:
         print(e)
-
     try:
         query = "select place_dim_id from place_dim where place_id='{}'".format(place[0])
         cursor.execute(query)
-        #pdb.set_trace()
         return cursor.fetchone()[0]
-    except Exception as e:
-        print(e)
+    except:
+        return 0
 
 
 def insert_tweet(tweet):
@@ -101,26 +114,6 @@ def insert_time(time):
     return cursor.fetchone()[0]
 
 
-def insert_tweet_fact(t, u, ti, p, tweet_fact):
-    query = "insert into tweet_fact (tweet_dim_id, user_dim_id, time_dim_id, place_dim_id, retweet_count, favorite_count) values ({}, {}, {}, {}, {}, {})".format(t, u, ti, p, *tweet_fact)
-    try:
-        cursor.execute(query)
-        db.commit()
-    except Exception as e:
-        print(e)
-
-
-def insert_user_fact(u, ti, user_fact):
-    query = "insert into user_fact (user_dim_id, time_dim_id, friends_count, followers_count, listed_count, statuses_count, favorites_count) values ({}, {}, {}, {}, {}, {}, {})".format(u, ti, *user_fact)
-
-    print(query)
-    try:
-        cursor.execute(query)
-        db.commit()
-    except Exception as e:
-        print(e)
-
-
 def parse_status(s):
 
     user = (_hi(s.user.id),
@@ -135,17 +128,14 @@ def parse_status(s):
 
 
     try:
-        #print(s.place)
-        #pdb.set_trace()
         place = (_hi(s.place.id),
                 _hs(s.place.country_code),
                 _hs(s.place.country),
                 _hs(s.place.name),
                 _hs(s.place.full_name),
-                _hs(s.place.place_type))
+                _hs(s.place.type))
     except Exception as e:
-        #place = (0, '', '', '', '', '')
-        place = None
+        place = (0, '', '', '', '', '')
 
     tweet = (s.id,
             clean(_hs(s.text)),
@@ -176,9 +166,10 @@ def parse_status(s):
     return user, place, tweet, time, tweet_fact, user_fact
 
 
-geobox_london = [-0.510375,51.28676,0.334015,51.691874]
-geobox_ny = [-74.25909,40.477399,-73.700181,40.916178]
+box_london = [-0.510375,51.28676,0.334015,51.691874]
 geobox_us = [-125.14,30.28,-64.05,48.85]
+
+
 if __name__ == '__main__':
 
     flag = True
@@ -191,5 +182,4 @@ if __name__ == '__main__':
             time.sleep(10 * (1 + random.random()))
 
         except Exception as e:
-            pass
-
+            print(e)

@@ -4,7 +4,7 @@ db = mysql.connector.connect(
         host="localhost",
         user="sai",
         passwd="sai31245",
-        database="dw"
+        database="dw_test"
         )
 
 cursor = db.cursor()
