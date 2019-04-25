@@ -15,11 +15,8 @@ def insert_hashtags(hashtags, t):
 
 				try:
 					h_d_id = cursor.fetchone()[0]
-					print(h_d_id)
 
 					query = "insert into hashtag_tweet_bridge (hashtag_dim_id, tweet_dim_id) values ({}, {})".format(h_d_id, t)
-
-					print("here")
 					cursor.execute(query)
 					db.commit()
 

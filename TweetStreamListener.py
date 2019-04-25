@@ -25,8 +25,10 @@ class TweetStreamListener(StreamListener):
             user, place, tweet, time, tweet_fact, user_fact = parse_status(status)
             #pdb.set_trace()
             if place != None:
+                # print(status.place)
                 p = insert_place(place)
                 if p:
+                    print(status.place)
                     # pdb.set_trace()
                     u = insert_user(user)
                     t = insert_tweet(tweet)
@@ -44,10 +46,10 @@ class TweetStreamListener(StreamListener):
 
 
     def on_error(self, error):
-        pass
+        print(error)
 
     def on_exception(self, exception):
-        pass
+        print(exception)
 
 def insert_tweet_fact(t, u, ti, p, tweet_fact):
     query = "insert into tweet_fact (tweet_dim_id, user_dim_id, time_dim_id, place_dim_id, retweet_count, favorite_count) values ({}, {}, {}, {}, {}, {})".format(t, u, ti, p, *tweet_fact)
@@ -172,10 +174,8 @@ def parse_status(s):
     return user, place, tweet, time, tweet_fact, user_fact
 
 
-box_london = [-0.510375,51.28676,0.334015,51.691874]
 geobox_us = [-125.14,30.28,-64.05,48.85]
-geobox_india = [68.11,6.55,97.4,35.67]
-world = [-25.2,-57.7,-23.3,77.0]
+
 if __name__ == '__main__':
 
     flag = True
@@ -184,7 +184,7 @@ if __name__ == '__main__':
         try:
             listener = TweetStreamListener()
             stream = Stream(auth, listener)
-            stream.filter(track=["trump", "mexico", "usa", "president", "wall", "congress", "impeach", "sanders"], locations=geobox_us+box_london)
+            stream.filter(track=["trump", "mexico", "usa", "president", "wall", "congress", "impeach", "sanders"], locations=geobox_us)
             time.sleep(3 * (1 + random.random()))
 
         except Exception as e:
